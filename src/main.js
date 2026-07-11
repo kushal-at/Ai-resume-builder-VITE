@@ -2,82 +2,78 @@ import './style.css';
 import { createIcons, icons } from 'lucide';
 import { FormBuilder } from './components/FormBuilder.js';
 import { ResumePreview } from './components/ResumePreview.js';
-import { enhanceBulletPoint, generateSummary } from './services/ai.js';
+import { enhanceBulletPoint, generateSummary, generateFullResume } from './services/ai.js';
 import { exportToPDF } from './utils/pdf.js';
 
 // ----------------------------------------------------
-// Default Mock Data for Portfolio Demo
+// Default Demo Data (John Doe)
 // ----------------------------------------------------
 const defaultState = {
   personal: {
-    name: 'Kushal At',
-    title: 'Senior Full Stack Engineer',
-    email: 'kushal@dev.io',
-    phone: '+1 (555) 872-9382',
-    website: 'https://kushal.dev',
-    linkedin: 'https://linkedin.com/in/kushal-at',
-    github: 'https://github.com/kushal-at',
-    summary: 'Innovative Full Stack Developer with 6+ years of experience constructing high-availability web systems. Expert in React, Node.js, and Cloud Infrastructure. Proven track record of reducing bundle sizes by 40% and optimizing DB execution plans.'
+    name: 'John Doe',
+    title: 'Full Stack Software Engineer',
+    email: 'john.doe@gmail.com',
+    phone: '+1 (555) 123-4567',
+    website: 'https://johndoe.dev',
+    linkedin: 'https://linkedin.com/in/johndoe',
+    github: 'https://github.com/johndoe',
+    summary: 'Results-driven Full Stack Engineer with 5+ years of experience building scalable web applications. Proficient in React, Node.js, and cloud architectures. Passionate about clean code, performance optimization, and delivering impactful user experiences.'
   },
   experience: [
     {
-      company: 'Apex Solutions',
-      role: 'Lead Developer',
-      startDate: 'Mar 2022',
+      company: 'TechCorp Inc.',
+      role: 'Senior Software Engineer',
+      startDate: 'Jan 2022',
       endDate: 'Present',
-      description: 'Architected micro-frontend systems using Vite module federation, dropping loading delays by 1.2s.\nManaged a team of 5 backend developers to build serverless REST APIs servicing 15,000 requests per minute.'
+      description: 'Led development of a microservices architecture serving 2M+ daily active users, reducing latency by 35%.\nMentored a team of 4 junior developers through code reviews and pair programming sessions.\nDesigned and implemented CI/CD pipelines using GitHub Actions, cutting deployment time by 60%.'
     },
     {
-      company: 'BitSystems Inc.',
-      role: 'Software Engineer II',
+      company: 'StartupXYZ',
+      role: 'Software Developer',
       startDate: 'Jun 2019',
-      endDate: 'Feb 2022',
-      description: 'Optimized PostgreSQL queries that cut average request execution latency from 240ms to 45ms.\nSpearheaded testing migrations to Jest resulting in test suite coverage increasing from 50% to 92%.'
+      endDate: 'Dec 2021',
+      description: 'Built responsive front-end interfaces with React and TypeScript for an enterprise SaaS platform.\nOptimized database queries reducing average API response times from 200ms to 45ms.'
     }
   ],
   projects: [
     {
-      name: 'Vite Resume Engine',
-      link: 'https://github.com/kushal-at/Ai-resume-builder-VITE',
-      description: 'Created a highly responsive lightweight CSS component framework with glassmorphism presets. Acquired 1,200+ stars on GitHub.'
+      name: 'TaskFlow — Project Manager',
+      link: 'https://github.com/johndoe/taskflow',
+      description: 'Developed a real-time project management tool with drag-and-drop kanban boards using React and WebSockets.\nImplemented role-based access control and team collaboration features serving 500+ active users.'
     }
   ],
   education: [
     {
-      institution: 'State Tech University',
+      institution: 'State University',
       degree: 'B.S. in Computer Science',
       startDate: '2015',
       endDate: '2019',
-      details: 'Magna Cum Laude. President of Open Source Student Association.'
+      details: 'Dean\'s List, GPA 3.8/4.0. Senior capstone project on distributed systems.'
     }
   ],
-  skills: ['JavaScript (ES6+)', 'Node.js', 'React', 'Vite', 'PostgreSQL', 'Docker', 'Amazon Web Services', 'TypeScript', 'TailwindCSS']
+  skills: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'PostgreSQL', 'Docker', 'AWS', 'GraphQL', 'Git']
 };
 
 // ----------------------------------------------------
-// State Management
+// State
 // ----------------------------------------------------
 let appState = JSON.parse(localStorage.getItem('ai_resume_builder_state')) || defaultState;
 let apiKey = localStorage.getItem('openrouter_api_key') || import.meta.env.VITE_OPENROUTER_API_KEY || '';
 let selectedModel = localStorage.getItem('openrouter_model') || 'meta-llama/llama-3-8b-instruct:free';
 let currentTemplate = localStorage.getItem('resume_template') || 'modern';
-let appTheme = localStorage.getItem('theme') || 'dark';
+let appTheme = localStorage.getItem('theme') || 'light';
 
 // ----------------------------------------------------
-// DOM Elements Selection
+// DOM
 // ----------------------------------------------------
 const editorContainer = document.getElementById('editor-container');
 const resumeSheetTarget = document.getElementById('resume-sheet-target');
 const templateSelect = document.getElementById('template-select');
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
 const exportPdfBtn = document.getElementById('export-pdf-btn');
-
-// Zoom elements
 const scaleSlider = document.getElementById('preview-scale-slider');
 const scaleValue = document.getElementById('preview-scale-value');
 const resumeWrapper = document.getElementById('resume-wrapper');
-
-// Modal Elements
 const settingsModal = document.getElementById('settings-modal');
 const settingsOpenBtn = document.getElementById('settings-open-btn');
 const settingsCloseBtn = document.getElementById('settings-close-btn');
@@ -87,89 +83,77 @@ const keyInput = document.getElementById('openrouter-key-input');
 const modelSelect = document.getElementById('openrouter-model-select');
 
 // ----------------------------------------------------
-// Component Instantiations
+// Components
 // ----------------------------------------------------
 const preview = new ResumePreview(resumeSheetTarget, currentTemplate);
 
 const formBuilder = new FormBuilder(
   editorContainer,
   appState,
-  // 1. OnUpdate Callback
+  // OnUpdate
   (newState) => {
     appState = newState;
     localStorage.setItem('ai_resume_builder_state', JSON.stringify(appState));
     preview.update(appState);
   },
-  // 2. OnAIEnhance Callback (Bullet Point Optimization)
+  // OnAIEnhance
   async (text, jobTitle) => {
-    if (!apiKey) {
-      triggerSettingsModal();
-      throw new Error('API Key missing. Enter your OpenRouter key to use AI features.');
-    }
+    if (!apiKey) { triggerSettingsModal(); throw new Error('API Key missing.'); }
     return enhanceBulletPoint(text, jobTitle, apiKey, selectedModel);
   },
-  // 3. OnAISummary Callback (Profile Summary Generation)
+  // OnAISummary
   async (skills, roles) => {
-    if (!apiKey) {
-      triggerSettingsModal();
-      throw new Error('API Key missing. Enter your OpenRouter key to use AI features.');
-    }
+    if (!apiKey) { triggerSettingsModal(); throw new Error('API Key missing.'); }
     return generateSummary(skills, roles, apiKey, selectedModel);
+  },
+  // OnAIFullGenerate
+  async (inputs) => {
+    if (!apiKey) { triggerSettingsModal(); throw new Error('API Key missing. Configure your OpenRouter key in API Settings first.'); }
+    return generateFullResume(inputs, apiKey, selectedModel);
   }
 );
 
 // ----------------------------------------------------
-// Helper Functions
+// Helpers
 // ----------------------------------------------------
-function applyZoom(zoomVal) {
-  scaleSlider.value = zoomVal;
-  scaleValue.textContent = `${zoomVal}%`;
-  const scale = zoomVal / 100;
-  resumeWrapper.style.transform = `scale(${scale})`;
-  resumeWrapper.style.marginBottom = `-${297 * (1 - scale)}mm`;
+function applyZoom(val) {
+  scaleSlider.value = val;
+  scaleValue.textContent = `${val}%`;
+  const s = val / 100;
+  resumeWrapper.style.transform = `scale(${s})`;
+  resumeWrapper.style.marginBottom = `-${297 * (1 - s)}mm`;
 }
 
 function autoFitScale() {
-  const previewPane = document.querySelector('.preview-pane');
-  if (!previewPane) return;
-  const containerWidth = previewPane.clientWidth;
-  const targetWidth = 834; // 210mm (794px) + padding
-  if (containerWidth < targetWidth) {
-    const scale = Math.floor((containerWidth / targetWidth) * 100);
-    applyZoom(Math.max(40, Math.min(100, scale)));
-  } else {
-    applyZoom(85);
-  }
+  const pane = document.querySelector('.preview-pane');
+  if (!pane) return;
+  const w = pane.clientWidth;
+  const target = 834;
+  applyZoom(w < target ? Math.max(40, Math.min(100, Math.floor((w / target) * 100))) : 80);
 }
 
 function applyTheme(theme) {
-  if (theme === 'light') {
-    document.body.classList.add('light-mode');
+  if (theme === 'dark') {
+    document.body.classList.add('dark-mode');
     themeToggleBtn.innerHTML = `<svg data-lucide="sun" width="18" height="18"></svg>`;
   } else {
-    document.body.classList.remove('light-mode');
+    document.body.classList.remove('dark-mode');
     themeToggleBtn.innerHTML = `<svg data-lucide="moon" width="18" height="18"></svg>`;
   }
-  createIcons({ icons }); // Re-render Lucide icons inside the button
+  createIcons({ icons });
 }
 
 function triggerSettingsModal() {
   const localKey = localStorage.getItem('openrouter_api_key') || '';
   keyInput.value = localKey;
-  if (!localKey && import.meta.env.VITE_OPENROUTER_API_KEY) {
-    keyInput.placeholder = 'Using shared Vercel demo key';
-  } else {
-    keyInput.placeholder = 'sk-or-v1-...';
-  }
+  keyInput.placeholder = (!localKey && import.meta.env.VITE_OPENROUTER_API_KEY) ? 'Using shared demo key' : 'sk-or-v1-...';
   modelSelect.value = selectedModel;
   settingsModal.classList.add('open');
 }
 
 // ----------------------------------------------------
-// Event Handlers Setup
+// Events
 // ----------------------------------------------------
-
-// 1. Template Switcher
 templateSelect.value = currentTemplate;
 templateSelect.addEventListener('change', (e) => {
   currentTemplate = e.target.value;
@@ -178,7 +162,6 @@ templateSelect.addEventListener('change', (e) => {
   preview.update(appState);
 });
 
-// 2. Theme Toggle
 applyTheme(appTheme);
 themeToggleBtn.addEventListener('click', () => {
   appTheme = appTheme === 'dark' ? 'light' : 'dark';
@@ -186,59 +169,38 @@ themeToggleBtn.addEventListener('click', () => {
   applyTheme(appTheme);
 });
 
-// 3. PDF Download Button
 exportPdfBtn.addEventListener('click', async () => {
   exportPdfBtn.disabled = true;
-  const originalText = exportPdfBtn.innerHTML;
-  exportPdfBtn.innerHTML = `<span class="spinner"></span> Generating PDF...`;
-
+  const orig = exportPdfBtn.innerHTML;
+  exportPdfBtn.innerHTML = `<span class="spinner"></span> Exporting...`;
   try {
-    const filename = `${appState.personal.name ? appState.personal.name.toLowerCase().replace(/\s+/g, '_') : 'resume'}_cv.pdf`;
-    await exportToPDF(resumeSheetTarget, filename);
-  } catch (err) {
-    alert(`Could not export PDF: ${err.message}`);
-  } finally {
-    exportPdfBtn.disabled = false;
-    exportPdfBtn.innerHTML = originalText;
-  }
+    const fn = `${appState.personal.name ? appState.personal.name.toLowerCase().replace(/\s+/g, '_') : 'resume'}_cv.pdf`;
+    await exportToPDF(resumeSheetTarget, fn);
+  } catch (err) { alert(`PDF export failed: ${err.message}`); }
+  finally { exportPdfBtn.disabled = false; exportPdfBtn.innerHTML = orig; }
 });
 
-// 4. Zoom Slider
-scaleSlider.addEventListener('input', (e) => {
-  applyZoom(parseInt(e.target.value, 10));
-});
+scaleSlider.addEventListener('input', (e) => applyZoom(+e.target.value));
 
-// 5. Open settings modal
 settingsOpenBtn.addEventListener('click', triggerSettingsModal);
-
-// 6. Close modal handlers
 const closeModal = () => settingsModal.classList.remove('open');
 settingsCloseBtn.addEventListener('click', closeModal);
 settingsCancelBtn.addEventListener('click', closeModal);
 
-// 7. Save settings handler
 settingsSaveBtn.addEventListener('click', () => {
-  const inputKey = keyInput.value.trim();
+  const k = keyInput.value.trim();
   selectedModel = modelSelect.value;
-  
-  localStorage.setItem('openrouter_api_key', inputKey);
+  localStorage.setItem('openrouter_api_key', k);
   localStorage.setItem('openrouter_model', selectedModel);
-  
-  apiKey = inputKey || import.meta.env.VITE_OPENROUTER_API_KEY || '';
-  
+  apiKey = k || import.meta.env.VITE_OPENROUTER_API_KEY || '';
   closeModal();
-  
-  // Quick notification
-  alert('Settings saved successfully!');
+  alert('Settings saved!');
 });
 
 // ----------------------------------------------------
-// Initialization
+// Init
 // ----------------------------------------------------
-// Initial rendering of preview pane and SVG icons
 preview.update(appState);
 autoFitScale();
 createIcons({ icons });
-
-// Window resize listener to automatically adjust layout scale
 window.addEventListener('resize', autoFitScale);
