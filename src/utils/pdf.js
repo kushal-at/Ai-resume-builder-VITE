@@ -29,7 +29,8 @@ export function exportToPDF(element, filename = 'resume.pdf') {
     pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
   };
 
-  return html2pdf()
+  const html2pdfFn = html2pdf.default || html2pdf;
+  return html2pdfFn()
     .from(element)
     .set(opt)
     .save()

@@ -1,5 +1,5 @@
 import './style.css';
-import { createIcons, Settings, Download, Moon, Sun } from 'lucide';
+import { createIcons, icons } from 'lucide';
 import { FormBuilder } from './components/FormBuilder.js';
 import { ResumePreview } from './components/ResumePreview.js';
 import { enhanceBulletPoint, generateSummary } from './services/ai.js';
@@ -124,7 +124,22 @@ const formBuilder = new FormBuilder(
 function applyZoom(zoomVal) {
   scaleSlider.value = zoomVal;
   scaleValue.textContent = `${zoomVal}%`;
-  resumeWrapper.style.transform = `scale(${zoomVal / 100})`;
+  const scale = zoomVal / 100;
+  resumeWrapper.style.transform = `scale(${scale})`;
+  resumeWrapper.style.marginBottom = `-${297 * (1 - scale)}mm`;
+}
+
+function autoFitScale() {
+  const previewPane = document.querySelector('.preview-pane');
+  if (!previewPane) return;
+  const containerWidth = previewPane.clientWidth;
+  const targetWidth = 834; // 210mm (794px) + padding
+  if (containerWidth < targetWidth) {
+    const scale = Math.floor((containerWidth / targetWidth) * 100);
+    applyZoom(Math.max(40, Math.min(100, scale)));
+  } else {
+    applyZoom(85);
+  }
 }
 
 function applyTheme(theme) {
@@ -135,7 +150,7 @@ function applyTheme(theme) {
     document.body.classList.remove('light-mode');
     themeToggleBtn.innerHTML = `<svg data-lucide="moon" width="18" height="18"></svg>`;
   }
-  createIcons(); // Re-render Lucide icons inside the button
+  createIcons({ icons }); // Re-render Lucide icons inside the button
 }
 
 function triggerSettingsModal() {
@@ -222,5 +237,8 @@ settingsSaveBtn.addEventListener('click', () => {
 // ----------------------------------------------------
 // Initial rendering of preview pane and SVG icons
 preview.update(appState);
-applyZoom(85);
-createIcons();
+autoFitScale();
+createIcons({ icons });
+
+// Window resize listener to automatically adjust layout scale
+window.addEventListener('resize', autoFitScale);

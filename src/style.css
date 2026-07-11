@@ -2,21 +2,21 @@
 
 :root {
   /* Colors */
-  --bg-app: #0b0f19;
-  --bg-card: rgba(20, 27, 45, 0.65);
-  --bg-editor: #0f172a;
-  --bg-preview-pane: #090d16;
-  --bg-header: rgba(15, 23, 42, 0.8);
+  --bg-app: #090d16;
+  --bg-card: rgba(17, 24, 39, 0.7);
+  --bg-editor: #0c101d;
+  --bg-preview-pane: #050810;
+  --bg-header: rgba(12, 16, 29, 0.75);
   
-  --border: rgba(255, 255, 255, 0.08);
-  --border-focus: rgba(99, 102, 241, 0.6);
+  --border: rgba(255, 255, 255, 0.05);
+  --border-focus: rgba(99, 102, 241, 0.8);
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-muted: #475569;
   
   --accent: #6366f1;
   --accent-hover: #4f46e5;
-  --accent-glow: rgba(99, 102, 241, 0.25);
+  --accent-glow: rgba(99, 102, 241, 0.3);
   --success: #10b981;
   --danger: #ef4444;
   
@@ -37,22 +37,22 @@
   scrollbar-color: var(--text-muted) transparent;
 }
 
-/* Light Mode support (automatically activated via class or media query if user wishes) */
+/* Light Mode support */
 .light-mode {
-  --bg-app: #f8fafc;
+  --bg-app: #f1f5f9;
   --bg-card: #ffffff;
-  --bg-editor: #f1f5f9;
-  --bg-preview-pane: #e2e8f0;
-  --bg-header: rgba(255, 255, 255, 0.8);
+  --bg-editor: #f8fafc;
+  --bg-preview-pane: #cbd5e1;
+  --bg-header: rgba(248, 250, 252, 0.85);
   --border: rgba(0, 0, 0, 0.08);
-  --border-focus: rgba(99, 102, 241, 0.6);
+  --border-focus: rgba(99, 102, 241, 0.8);
   --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
   --accent: #4f46e5;
   --accent-hover: #3730a3;
-  --shadow-main: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
-  --shadow-pdf: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
+  --shadow-main: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+  --shadow-pdf: 0 20px 40px -15px rgba(0, 0, 0, 0.1);
 }
 
 /* Reset & Base */
@@ -64,11 +64,15 @@
 }
 
 body {
-  background-color: var(--bg-app);
+  background: radial-gradient(circle at 80% 20%, #1e1b4b 0%, #090d16 65%, #02040a 100%);
   color: var(--text-primary);
   min-height: 100vh;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
+}
+
+.light-mode body {
+  background: radial-gradient(circle at 80% 20%, #e2e8f0 0%, #f1f5f9 65%, #f8fafc 100%);
 }
 
 /* Custom scrollbars */
@@ -263,13 +267,29 @@ header {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-main);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: var(--backdrop);
 }
 
+.section-card:hover {
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.light-mode .section-card:hover {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
 .section-card.active {
+  border-color: rgba(99, 102, 241, 0.45);
+  box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.15);
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.light-mode .section-card.active {
+  background: #ffffff;
   border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.1);
 }
 
 .section-header {
@@ -284,6 +304,10 @@ header {
 
 .section-header:hover {
   background-color: rgba(255, 255, 255, 0.02);
+}
+
+.light-mode .section-header:hover {
+  background-color: rgba(0, 0, 0, 0.01);
 }
 
 .section-title {
@@ -337,6 +361,13 @@ header {
   gap: 1rem;
 }
 
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
 label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -354,18 +385,35 @@ textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   color: var(--text-primary);
-  padding: 0.75rem 1rem;
+  padding: 0.8rem 1.1rem;
   font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.25s, box-shadow 0.25s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
+}
+
+.light-mode input[type="text"],
+.light-mode input[type="email"],
+.light-mode input[type="tel"],
+.light-mode input[type="url"],
+.light-mode textarea {
+  background-color: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #0f172a;
 }
 
 input:focus,
 textarea:focus {
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 2px var(--accent-glow);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
   background-color: rgba(15, 23, 42, 0.6);
+}
+
+.light-mode input:focus,
+.light-mode textarea:focus {
+  background-color: #ffffff;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 textarea {
