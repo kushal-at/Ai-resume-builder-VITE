@@ -58,7 +58,7 @@ const defaultState = {
 // State Management
 // ----------------------------------------------------
 let appState = JSON.parse(localStorage.getItem('ai_resume_builder_state')) || defaultState;
-let apiKey = localStorage.getItem('openrouter_api_key') || '';
+let apiKey = localStorage.getItem('openrouter_api_key') || import.meta.env.VITE_OPENROUTER_API_KEY || '';
 let selectedModel = localStorage.getItem('openrouter_model') || 'meta-llama/llama-3-8b-instruct:free';
 let currentTemplate = localStorage.getItem('resume_template') || 'modern';
 let appTheme = localStorage.getItem('theme') || 'dark';
@@ -139,7 +139,13 @@ function applyTheme(theme) {
 }
 
 function triggerSettingsModal() {
-  keyInput.value = apiKey;
+  const localKey = localStorage.getItem('openrouter_api_key') || '';
+  keyInput.value = localKey;
+  if (!localKey && import.meta.env.VITE_OPENROUTER_API_KEY) {
+    keyInput.placeholder = 'Using shared Vercel demo key';
+  } else {
+    keyInput.placeholder = 'sk-or-v1-...';
+  }
   modelSelect.value = selectedModel;
   settingsModal.classList.add('open');
 }
@@ -197,11 +203,13 @@ settingsCancelBtn.addEventListener('click', closeModal);
 
 // 7. Save settings handler
 settingsSaveBtn.addEventListener('click', () => {
-  apiKey = keyInput.value.trim();
+  const inputKey = keyInput.value.trim();
   selectedModel = modelSelect.value;
   
-  localStorage.setItem('openrouter_api_key', apiKey);
+  localStorage.setItem('openrouter_api_key', inputKey);
   localStorage.setItem('openrouter_model', selectedModel);
+  
+  apiKey = inputKey || import.meta.env.VITE_OPENROUTER_API_KEY || '';
   
   closeModal();
   
