@@ -25,11 +25,11 @@ export class FormBuilder {
     
     this.collapsedStates = {
       personal: false,
-      summary: false,
-      experience: false,
-      projects: false,
-      education: false,
-      skills: false
+      summary: true,
+      experience: true,
+      projects: true,
+      education: true,
+      skills: true
     };
 
     this.init();

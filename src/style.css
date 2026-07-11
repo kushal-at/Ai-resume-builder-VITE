@@ -240,6 +240,7 @@ header {
   grid-template-columns: 460px 1fr;
   flex: 1;
   overflow: hidden;
+  min-height: 0; /* Critical for grid children to respect overflow */
 }
 
 @media (max-width: 1024px) {
@@ -254,10 +255,13 @@ header {
   background-color: var(--bg-editor);
   border-right: 1px solid var(--border);
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 1.5rem;
+  padding-bottom: 6rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  min-height: 0; /* Allow scrolling within grid */
 }
 
 /* Collapsible Section Cards */
@@ -265,10 +269,11 @@ header {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--shadow-main);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: var(--backdrop);
+  flex-shrink: 0; /* Prevent cards from shrinking */
 }
 
 .section-card:hover {
@@ -337,15 +342,11 @@ header {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  max-height: 2000px;
-  transition: max-height 0.4s cubic-bezier(0, 1, 0, 1), padding 0.3s ease;
+  overflow: hidden;
 }
 
 .section-card.collapsed .section-body {
-  max-height: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  overflow: hidden;
+  display: none;
 }
 
 /* Form Styles */
