@@ -1,5 +1,7 @@
 # 🤖 AI Resume Builder & Optimizer
 
+🔗 **[Live Demo](https://ai-resume-builder-vite.vercel.app)**
+
 A premium, interactive, client-side web application designed to help professionals build, optimize, and export ATS-friendly resumes. Built with **Vite, Vanilla JS, and Vanilla CSS**, it features **OpenRouter AI integration** to rewrite bullet points and generate summaries, and exports directly to polished **A4 PDFs**.
 
 ## ✨ Features
